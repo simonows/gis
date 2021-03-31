@@ -25,13 +25,17 @@ private:
     static std::mutex mutex_;
     LogCategory level;
     std::ofstream * stream;
+    std::string _buffer;
+    std::string ltrim(std::string s);
+    std::string rtrim(std::string s);
+    std::string trim();
 
 protected:
     /**
      * Singleton's constructor should always be hidden to prevent
      * creating an object using the new operator.
     */
-    Logger(std::string const &path): log_path(path), std::ofstream()
+    Logger(std::string const &path): std::ofstream(), log_path(path)
     {
         level = INFO;
         stream = this;
@@ -40,7 +44,7 @@ protected:
     Logger(std::ostream &str)
     {
         level = INFO;
-        stream = (std::ofstream *)&str;
+        stream = static_cast<std::ofstream *>(&str);
     }
     ~Logger()
     {
@@ -73,8 +77,11 @@ public:
         // ...
     }
 
-    friend Logger* operator<< (Logger *out, std::string const &value);
-    friend Logger* operator<< (Logger *out, LogCategory const &value);
+    friend Logger& operator<< (Logger &out, std::string const value);
+    friend Logger& operator<< (Logger &out, char const *value);
+    friend Logger& operator<< (Logger &out, LogCategory const &value);
+    friend Logger& operator<< (Logger &out, int const &value);
+    friend Logger& operator<< (Logger &out, std::ostream&(*param)(std::ostream&));
 };
 
 #endif // __LOGGER_H__
