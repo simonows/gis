@@ -23,7 +23,8 @@ public:
     CommandProcessor(Gis const*);
     ~CommandProcessor(void);
 
-    friend std::ifstream& operator>> (std::ifstream& in, CommandProcessor const &value);
+    friend char* operator>> (char *const in, CommandProcessor &value);
+    friend std::ifstream& operator>> (std::ifstream& in, CommandProcessor &value);
     friend std::ofstream& operator<< (std::ofstream& out, CommandProcessor const &value);
 };
 
