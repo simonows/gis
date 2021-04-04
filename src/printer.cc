@@ -17,6 +17,13 @@ int Printer::add(char const *const ptr)
     return rc;
 }
 
+int Printer::add(std::string const &ptr)
+{
+    int rc = 0;
+    _buffer += ptr;
+    return rc;
+}
+
 std::ofstream& operator<< (std::ofstream &out, Printer &value)
 {
     trim(value._buffer);

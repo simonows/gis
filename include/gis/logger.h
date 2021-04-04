@@ -26,6 +26,7 @@ private:
     LogCategory level;
     std::ofstream * stream;
     std::string _buffer;
+    static std::string _input_file;
     std::string ltrim(std::string s);
     std::string rtrim(std::string s);
     std::string trim();
@@ -71,6 +72,8 @@ public:
      * field to the client.
     */
     static Logger *get_logger(std::string const &path = "");
+    static std::string get_input_file(void);
+    static void set_input_file(std::string input_file);
 
     void SomeBusinessLogic()
     {

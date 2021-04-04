@@ -11,6 +11,7 @@
  */
 Logger* Logger::pinstance_{nullptr};
 std::mutex Logger::mutex_;
+std::string Logger::_input_file;
 
 /**
  * The first time we call GetInstance we will lock the storage location
@@ -98,5 +99,16 @@ Logger& operator<< (Logger &out, std::ostream&(*param)(std::ostream&)
 
 exit:
     return out;
+}
+
+
+std::string Logger::get_input_file(void)
+{
+    return _input_file;
+}
+
+void Logger::set_input_file(std::string input_file)
+{
+    _input_file = input_file;
 }
 

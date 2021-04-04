@@ -32,6 +32,7 @@ int main(int argc, char **argv)
         goto exit;
     }
 
+    log.set_input_file(std::string(argv[1]));
     script.open(argv[1], std::ios::in);
     outlog.open(argv[2], std::ios::out);
 
