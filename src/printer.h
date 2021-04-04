@@ -16,6 +16,7 @@ public:
     ~Printer(void);
 
     int add(char const* ptr);
+    int add(std::string const &ptr);
 
     friend std::ofstream& operator<< (std::ofstream& out, Printer &value);
 };

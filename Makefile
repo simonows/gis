@@ -21,9 +21,10 @@ debug:
 
 clean:
 	@rm -rf $(BUILD_DIR)
+	@rm -f test/output01.txt
 
 run:
-	./build/release/GIS
+	./build/release/GIS test/script01.txt test/output01.txt
 
 run_debug: debug
 	gdb ./build/debug/GIS
