@@ -11,7 +11,9 @@ void Gis::set_bounds(DMS a_long, DMS a_lat, DMS b_long, DMS b_lat)
     A[1] = a_lat;
     B[0] = b_long;
     B[1] = b_lat;
+    quad.set_bounds(a_long, a_lat, b_long, b_lat);
     start_flag = true;
+    is_opened = false;
 }
 
 
@@ -29,10 +31,14 @@ void Gis::set_db_file(char const *const arg)
 
 int Gis::open()
 {
-    std::ofstream ofs(_db); // file create
-    ofs.close();
+    if (!is_opened)
+    {
+        std::ofstream ofs(_db); // file create
+        ofs.close();
+        _data.open(_db, std::ios::out | std::ios::in);
+        is_opened = true;
+    }
 
-    _data.open(_db, std::ios::out | std::ios::in);
     return !_data.is_open();
 }
 
@@ -205,8 +211,9 @@ exit:
 void Gis::add(char *const arg)
 {
     GisRecord *rec = nullptr;
-    unsigned long pos = static_cast<unsigned long>(_data.tellp());
+    long pos = _data.tellp();
 
+    _data.clear();
     _data << arg << std::endl;
     rec = parse_gis(log, arg);
     if (!rec)
@@ -214,7 +221,9 @@ void Gis::add(char *const arg)
         goto exit;
     }
 
-    hash_table[rec->feature_name + rec->state] = pos;
+    hash_table[rec->feature_name + rec->state] = static_cast<unsigned long>(pos);
+    rec->row = pos;
+    quad.add(rec);
 
 exit:
     delete rec;
@@ -258,5 +267,71 @@ struct GisRecord *Gis::get(std::string name, std::string state)
 
     pool.push_back(*rec);
     return rec;
+}
+
+int Gis::get(std::vector<struct GisRecord *> &mas, DMS const &a_long, DMS const &a_lat)
+{
+    int rc = 0;
+    char buffer[256] = { 0 };
+    size_t pool_size = pool.size();
+    std::vector<long> ret;
+    struct GisRecord *temp = nullptr;
+
+    quad.search(ret, &a_long, &a_lat);
+
+    for (size_t i = 0; i < ret.size(); i++)
+    {
+        _data.seekg(ret[i]);
+        _data.getline(buffer, 256);
+        _data.seekg(0);
+        temp = parse_gis(log, buffer);
+        temp->row = ret[i];
+        mas.push_back(temp);
+
+        if (pool_size >= POOL_SIZE)
+        {
+            pool.erase(pool.begin());
+        }
+        pool.push_back(*temp);
+    }
+
+exit:
+    return rc;
+}
+
+
+int Gis::get(
+    std::vector<struct GisRecord *> &mas
+  , DMS const &a_long
+  , DMS const &a_lat
+  , unsigned const p_long
+  , unsigned const p_lat
+){
+    int rc = 0;
+    char buffer[256] = { 0 };
+    size_t pool_size = pool.size();
+    std::vector<long> ret;
+    struct GisRecord *temp = nullptr;
+
+    quad.search(ret, &a_long, &a_lat, p_long, p_lat);
+
+    for (size_t i = 0; i < ret.size(); i++)
+    {
+        _data.seekg(ret[i]);
+        _data.getline(buffer, 256);
+        _data.seekg(0);
+        temp = parse_gis(log, buffer);
+        temp->row = ret[i];
+        mas.push_back(temp);
+
+        if (pool_size >= POOL_SIZE)
+        {
+            pool.erase(pool.begin());
+        }
+        pool.push_back(*temp);
+    }
+
+exit:
+    return rc;
 }
 
