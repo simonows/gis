@@ -126,6 +126,8 @@ exit:
 int CommandProcessor::import(CommandProcessor *priv, std::vector<std::string> &args)
 {
     int rc = 0;
+    std::ifstream thread;
+    char buffer[1024] = { 0 };
 
     if (!priv)
     {
@@ -136,6 +138,53 @@ int CommandProcessor::import(CommandProcessor *priv, std::vector<std::string> &a
     {
         rc = EINVAL;
         goto exit;
+    }
+
+    if (!priv->_gis->get_flag())
+    {
+        *priv->_log << WARN << priv->_log->get_input_file() << ":" << priv->_line << " ";
+        *priv->_log << "world is not set:" << std::endl;
+        goto exit;
+    }
+
+    rc = priv->_gis->open();
+    if (rc)
+    {
+        goto exit;
+    }
+
+    thread.open(args[1], std::ios::in);
+    rc = !thread.is_open();
+    if (rc)
+    {
+        *priv->_log << WARN << priv->_log->get_input_file() << ":" << priv->_line << " ";
+        *priv->_log << "file not found:  \"" << args[1] << "\"";
+        *priv->_log << std::endl;
+        goto exit;
+    }
+
+    thread.getline(buffer, 1024);
+
+    while (!thread.eof())
+    {
+        thread.getline(buffer, 1024);
+        priv->_gis->add(buffer);
+    }
+    thread.close();
+
+    if (priv->_out)
+    {
+        priv->_out->add("\n");
+        priv->_out->add("Command ");
+        priv->_out->add(std::to_string(priv->_comm_num));
+        priv->_out->add(": ");
+        for (int i = 0; i < static_cast<int>(args.size()); i++)
+        {
+            priv->_out->add(" ");
+            priv->_out->add(args[static_cast<unsigned long>(i)]);
+        }
+        priv->_out->add("\n------------------------------------------------------------------------------------------\n");
+        priv->_out->add("Successfully imported!\n");
     }
 
 exit:
@@ -154,6 +203,12 @@ int CommandProcessor::debug(CommandProcessor *priv, std::vector<std::string> &ar
     if (!priv->_gis)
     {
         rc = EINVAL;
+        goto exit;
+    }
+    if (!priv->_gis->get_flag())
+    {
+        *priv->_log << WARN << priv->_log->get_input_file() << ":" << priv->_line << " ";
+        *priv->_log << "world is not set:" << std::endl;
         goto exit;
     }
 
@@ -214,6 +269,12 @@ int CommandProcessor::what_is_at(CommandProcessor *priv, std::vector<std::string
         rc = EINVAL;
         goto exit;
     }
+    if (!priv->_gis->get_flag())
+    {
+        *priv->_log << WARN << priv->_log->get_input_file() << ":" << priv->_line << " ";
+        *priv->_log << "world is not set:" << std::endl;
+        goto exit;
+    }
 
 exit:
     return rc;
@@ -222,6 +283,8 @@ exit:
 int CommandProcessor::what_is(CommandProcessor *priv, std::vector<std::string> &args)
 {
     int rc = 0;
+    long row_num = 0;
+    GisRecord *rec = nullptr;
 
     if (!priv)
     {
@@ -233,6 +296,59 @@ int CommandProcessor::what_is(CommandProcessor *priv, std::vector<std::string> &
         rc = EINVAL;
         goto exit;
     }
+    if (!priv->_gis->get_flag())
+    {
+        *priv->_log << WARN << priv->_log->get_input_file() << ":" << priv->_line << " ";
+        *priv->_log << "world is not set:" << std::endl;
+        goto exit;
+    }
+
+    if (priv->_out)
+    {
+        priv->_out->add("Command ");
+        priv->_out->add(std::to_string(priv->_comm_num));
+        priv->_out->add(": ");
+        for (size_t i = 0; i < args.size(); i++)
+        {
+            priv->_out->add(" ");
+            priv->_out->add(args[static_cast<unsigned long>(i)]);
+        }
+        priv->_out->add("\n\n");
+    }
+
+    rec = priv->_gis->get(args[1], args[2]);
+    if (priv->_log && rec)
+    {
+        if (priv->_out)
+        {
+            priv->_out->add("  ");
+            priv->_out->add(std::to_string(rec->row));
+            priv->_out->add(":  ");
+            priv->_out->add(rec->country);
+            priv->_out->add("  (");
+            priv->_out->add(std::to_string(rec->longtitude.degrees) + "d ");
+            priv->_out->add(std::to_string(rec->longtitude.minutes) + "m ");
+            priv->_out->add(std::to_string(rec->longtitude.seconds) + "s North, ");
+            priv->_out->add(std::to_string(rec->latitude.degrees) + "d ");
+            priv->_out->add(std::to_string(rec->latitude.minutes) + "m ");
+            priv->_out->add(std::to_string(rec->latitude.seconds) + "s West)\n");
+            priv->_out->add("------------------------------------------------------------------------------------------\n");
+        }
+        delete rec;
+    }
+    else
+    {
+        if (priv->_out)
+        {
+            priv->_out->add("  No records match \"");
+            priv->_out->add(args[1]);
+            priv->_out->add("\" and \"");
+            priv->_out->add(args[2]);
+            priv->_out->add("\"\n");
+            priv->_out->add("------------------------------------------------------------------------------------------\n");
+        }
+    }
+
 
 exit:
     return rc;
@@ -250,6 +366,12 @@ int CommandProcessor::what_is_in(CommandProcessor *priv, std::vector<std::string
     if (!priv->_gis)
     {
         rc = EINVAL;
+        goto exit;
+    }
+    if (!priv->_gis->get_flag())
+    {
+        *priv->_log << WARN << priv->_log->get_input_file() << ":" << priv->_line << " ";
+        *priv->_log << "world is not set:" << std::endl;
         goto exit;
     }
 

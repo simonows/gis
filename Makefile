@@ -24,7 +24,7 @@ clean:
 	@rm -f test/output01.txt
 
 run:
-	./build/release/GIS test/script01.txt test/output01.txt
+	./build/release/GIS test/database test/script01.txt test/output01.txt
 
 run_debug: debug
 	gdb ./build/debug/GIS

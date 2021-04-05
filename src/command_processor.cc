@@ -23,7 +23,7 @@ CommandProcessor::CommandProcessor(Gis *const gis)
     _log = Logger::get_logger();
     _out = new Printer();
     _line = 0;
-    _comm_num = 1;
+    _comm_num = 0;
     _run_flag = 1;
 }
 
