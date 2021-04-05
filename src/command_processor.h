@@ -30,34 +30,39 @@ class CommandProcessor;
 typedef struct CommandHandler
 {
     char const *command;
-    int (*handler)(CommandProcessor const *priv, std::vector<std::string> &args);
+    int (*handler)(CommandProcessor *priv, std::vector<std::string> &args);
 } CommandHandler;
 
 
 class CommandProcessor
 {
-    Gis const* _gis;
+    Gis *_gis;
     char const* _script_name;
     Printer *_out;
     Logger *_log;
     int _line;
+    int _comm_num;
     static struct CommandHandler _command_pattern[];
+    bool _run_flag;
 
 protected:
     int _kernel(std::string const &buffer);
     int command_parse(std::string const &comm, std::vector<std::string> &args);
 
-    static int world(CommandProcessor const *priv, std::vector<std::string> &args);
-    static int import(CommandProcessor const *priv, std::vector<std::string> &args);
-    static int debug(CommandProcessor const *priv, std::vector<std::string> &args);
-    static int quit(CommandProcessor const *priv, std::vector<std::string> &args);
-    static int what_is_at(CommandProcessor const *priv, std::vector<std::string> &args);
-    static int what_is(CommandProcessor const *priv, std::vector<std::string> &args);
-    static int what_is_in(CommandProcessor const *priv, std::vector<std::string> &args);
+    static int world(CommandProcessor *priv, std::vector<std::string> &args);
+    static int import(CommandProcessor *priv, std::vector<std::string> &args);
+    static int debug(CommandProcessor *priv, std::vector<std::string> &args);
+    static int quit(CommandProcessor *priv, std::vector<std::string> &args);
+    static int what_is_at(CommandProcessor *priv, std::vector<std::string> &args);
+    static int what_is(CommandProcessor *priv, std::vector<std::string> &args);
+    static int what_is_in(CommandProcessor *priv, std::vector<std::string> &args);
 
 public:
-    CommandProcessor(Gis const*);
+    CommandProcessor(Gis *);
     ~CommandProcessor(void);
+
+    bool get_state();
+    void set_state(bool const flag);
 
     friend char* operator>> (char *const in, CommandProcessor &value);
     friend std::ifstream& operator>> (std::ifstream& in, CommandProcessor &value);

@@ -17,17 +17,31 @@ struct CommandHandler CommandProcessor::_command_pattern[] = {
 };
 
 
-CommandProcessor::CommandProcessor(Gis const* const gis)
+CommandProcessor::CommandProcessor(Gis *const gis)
 {
     _gis = gis;
     _log = Logger::get_logger();
     _out = new Printer();
     _line = 0;
+    _comm_num = 1;
+    _run_flag = 1;
 }
 
 
 CommandProcessor::~CommandProcessor()
 {
+}
+
+
+bool CommandProcessor::get_state()
+{
+    return _run_flag;
+}
+
+
+void CommandProcessor::set_state(bool const flag)
+{
+    _run_flag = flag;
 }
 
 
@@ -119,6 +133,7 @@ int CommandProcessor::_kernel(std::string const &buffer)
         }
         goto exit;
     }
+    _comm_num++;
 
 
 exit:
