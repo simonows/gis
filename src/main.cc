@@ -36,12 +36,15 @@ int main(int argc, char **argv)
     script.open(argv[1], std::ios::in);
     outlog.open(argv[2], std::ios::out);
 
-    while (!script.eof())
+    while (!script.eof() && comproc.get_state())
     {
         script.getline(buffer, MAX_STRING_LEN);
         buffer >> comproc;
         outlog << comproc;
     }
+
+    script.close();
+    outlog.close();
 
 exit:
     return rc;
