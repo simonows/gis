@@ -15,7 +15,7 @@ int main(int argc, char **argv)
     int rc = 0;
     char buffer[MAX_STRING_LEN] = { 0 };
     std::ifstream script;
-    std::ofstream outlog, output;
+    std::ofstream outlog;
     Logger &log = *Logger::get_logger();
     Gis gis;
     CommandProcessor comproc(&gis);
@@ -33,8 +33,9 @@ int main(int argc, char **argv)
     }
 
     log.set_input_file(std::string(argv[1]));
-    script.open(argv[1], std::ios::in);
-    outlog.open(argv[2], std::ios::out);
+    gis.set_db_file(argv[1]);
+    script.open(argv[2], std::ios::in);
+    outlog.open(argv[3], std::ios::out);
 
     while (!script.eof() && comproc.get_state())
     {

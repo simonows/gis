@@ -7,7 +7,7 @@
 world	0794530W	0792630W	381000N	383000N
 ;
 ; Import the dataset [the address here is a relative address]
-import	./VA_Monterey.txt
+import	./test/VA_Monterey.txt
 ;
 ; Lets visualize our already imported geographical data [this is an optional command]
 debug	world
@@ -68,7 +68,7 @@ what_is_in	-filter	pop	382000N	0793530W	3600	3600
 ;
 debug	pool
 ; Let's import a larger dataset [wait a second, VA_Bath has 520 records, why didn't all of them get imported? explain this in your report]
-import	./VA_Bath.txt
+import	./test/VA_Bath.txt
 ; as import command bypasses the buffer pool, content of the buffer pool should remain intact
 debug	pool
 ;
