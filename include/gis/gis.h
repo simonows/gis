@@ -7,24 +7,10 @@
 #include <cstring>
 
 #include <gis/logger.h>
+#include <gis/coord.h>
 
 #define POOL_SIZE 15
 
-typedef struct DMS
-{
-    char sign_lat;
-    char sign_long;
-    unsigned int degrees;
-    unsigned int minutes;
-    unsigned int seconds;
-} DMS;
-
-
-long inline make_second(DMS const &arg)
-{
-    return (arg.sign_lat || arg.sign_long ? -1 : 1)
-         * (arg.degrees * 3600 + arg.minutes * 60 + arg.seconds);
-}
 
 typedef struct GisRecord
 {
@@ -41,6 +27,7 @@ typedef struct GisRecord
     long row;
 } GisRecord;
 
+
 class Gis
 {
     Logger *log;
@@ -50,6 +37,8 @@ class Gis
     std::fstream _data;
     std::vector<struct GisRecord>pool;
     std::map<std::string, unsigned long> hash_table;
+    Coord quad;
+    bool is_opened;
 
 protected:
 
@@ -70,6 +59,18 @@ public:
     int open();
     void add(char *);
     struct GisRecord *get(std::string name, std::string state);
+    int get(
+        std::vector<struct GisRecord *> &mas
+      , DMS const &a_long
+      , DMS const &a_lat
+    );
+    int get(
+        std::vector<struct GisRecord *> &mas
+      , DMS const &a_long
+      , DMS const &a_lat
+      , unsigned const p_long
+      , unsigned const p_lat
+    );
 };
 
 #endif /* __GIS_H_ */

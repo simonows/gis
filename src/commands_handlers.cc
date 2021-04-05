@@ -247,6 +247,7 @@ int CommandProcessor::quit(CommandProcessor *priv, std::vector<std::string> &arg
         priv->_out->add("------------------------------------------------------------------------------------------\n");
         priv->_out->add("End time: ");
         priv->_out->add(now_time.substr(0, now_time.size() - 1));
+        *priv->_log << INFO << "GIS system terminated" << std::endl;
     }
 
     priv->set_state(false);
@@ -258,6 +259,8 @@ exit:
 int CommandProcessor::what_is_at(CommandProcessor *priv, std::vector<std::string> &args)
 {
     int rc = 0;
+    DMS long_d, lat_d;
+    std::vector<struct GisRecord *> mas;
 
     if (!priv)
     {
@@ -274,6 +277,83 @@ int CommandProcessor::what_is_at(CommandProcessor *priv, std::vector<std::string
         *priv->_log << WARN << priv->_log->get_input_file() << ":" << priv->_line << " ";
         *priv->_log << "world is not set:" << std::endl;
         goto exit;
+    }
+
+    rc = parse_dms(args[1], long_d);
+    if (rc)
+    {
+        goto exit;
+    }
+    rc = parse_dms(args[2], lat_d);
+    if (rc)
+    {
+        goto exit;
+    }
+
+    if (priv->_out)
+    {
+        priv->_out->add("Command ");
+        priv->_out->add(std::to_string(priv->_comm_num));
+        priv->_out->add(": ");
+        for (size_t i = 0; i < args.size(); i++)
+        {
+            priv->_out->add(" ");
+            priv->_out->add(args[static_cast<unsigned long>(i)]);
+        }
+        priv->_out->add("\n\n");
+    }
+
+    priv->_gis->get(mas, long_d, lat_d);
+    if (mas.size() && priv->_out)
+    {
+        priv->_out->add("  The following ");
+        priv->_out->add(std::to_string(mas.size()));
+        priv->_out->add(" feature(s) were found at (");
+        priv->_out->add(std::to_string(long_d.degrees));
+        priv->_out->add("d ");
+        priv->_out->add(std::to_string(long_d.minutes));
+        priv->_out->add("m ");
+        priv->_out->add(std::to_string(long_d.seconds));
+        priv->_out->add("s North, ");
+        priv->_out->add(std::to_string(lat_d.degrees));
+        priv->_out->add("d ");
+        priv->_out->add(std::to_string(lat_d.minutes));
+        priv->_out->add("m ");
+        priv->_out->add(std::to_string(lat_d.seconds));
+        priv->_out->add("s West)\n");
+
+        for (size_t i = 0; i < mas.size(); i++)
+        {
+            priv->_out->add("    ");
+            priv->_out->add(std::to_string(mas[i]->row));
+            priv->_out->add(":  \"");
+            priv->_out->add(mas[i]->feature_name);
+            priv->_out->add("\"  \"");
+            priv->_out->add(mas[i]->country);
+            priv->_out->add("\"  \"");
+            priv->_out->add(mas[i]->state);
+            priv->_out->add("\n");
+            delete mas[i];
+        }
+
+        priv->_out->add("------------------------------------------------------------------------------------------\n");
+    }
+    else
+    {
+        priv->_out->add("  Nothing was found at (");
+        priv->_out->add(std::to_string(long_d.degrees));
+        priv->_out->add("d ");
+        priv->_out->add(std::to_string(long_d.minutes));
+        priv->_out->add("m ");
+        priv->_out->add(std::to_string(long_d.seconds));
+        priv->_out->add("s North, ");
+        priv->_out->add(std::to_string(lat_d.degrees));
+        priv->_out->add("d ");
+        priv->_out->add(std::to_string(lat_d.minutes));
+        priv->_out->add("m ");
+        priv->_out->add(std::to_string(lat_d.seconds));
+        priv->_out->add("s West)\n");
+        priv->_out->add("------------------------------------------------------------------------------------------\n");
     }
 
 exit:
@@ -357,6 +437,10 @@ exit:
 int CommandProcessor::what_is_in(CommandProcessor *priv, std::vector<std::string> &args)
 {
     int rc = 0;
+    DMS long_d, lat_d;
+    unsigned long_p, lat_p;
+    size_t cou = 0;
+    std::vector<struct GisRecord *> mas;
 
     if (!priv)
     {
@@ -373,6 +457,112 @@ int CommandProcessor::what_is_in(CommandProcessor *priv, std::vector<std::string
         *priv->_log << WARN << priv->_log->get_input_file() << ":" << priv->_line << " ";
         *priv->_log << "world is not set:" << std::endl;
         goto exit;
+    }
+
+    if (args[1] == "-filter")
+    {
+        cou = 2;
+    }
+    if (args[1] == "-long")
+    {
+        cou = 1;
+    }
+    rc = parse_dms(args[1 + cou], long_d);
+    if (rc)
+    {
+        goto exit;
+    }
+    rc = parse_dms(args[2 + cou], lat_d);
+    if (rc)
+    {
+        goto exit;
+    }
+    long_p = static_cast<unsigned>(atoi(args[3 + cou].c_str()));
+    lat_p = static_cast<unsigned>(atoi(args[4 + cou].c_str()));
+
+    if (priv->_out)
+    {
+        priv->_out->add("Command ");
+        priv->_out->add(std::to_string(priv->_comm_num));
+        priv->_out->add(": ");
+        for (size_t i = 0; i < args.size(); i++)
+        {
+            priv->_out->add(" ");
+            priv->_out->add(args[static_cast<unsigned long>(i)]);
+        }
+        priv->_out->add("\n\n");
+    }
+
+    priv->_gis->get(mas, long_d, lat_d, long_p, lat_p);
+    if (mas.size() && priv->_out)
+    {
+        priv->_out->add("  The following ");
+        priv->_out->add(std::to_string(mas.size()));
+        priv->_out->add(" feature(s) were found at (");
+        priv->_out->add(std::to_string(long_d.degrees));
+        priv->_out->add("d ");
+        priv->_out->add(std::to_string(long_d.minutes));
+        priv->_out->add("m ");
+        priv->_out->add(std::to_string(long_d.seconds));
+        priv->_out->add("s North +/- ");
+        priv->_out->add(std::to_string(long_p));
+        priv->_out->add(", ");
+        priv->_out->add(std::to_string(lat_d.degrees));
+        priv->_out->add("d ");
+        priv->_out->add(std::to_string(lat_d.minutes));
+        priv->_out->add("m ");
+        priv->_out->add(std::to_string(lat_d.seconds));
+        priv->_out->add("s West +/- ");
+        priv->_out->add(std::to_string(lat_p));
+        priv->_out->add(")\n");
+
+        for (size_t i = 0; i < mas.size(); i++)
+        {
+            priv->_out->add("    ");
+            priv->_out->add(std::to_string(mas[i]->row));
+            priv->_out->add(":  \"");
+            priv->_out->add(mas[i]->feature_name);
+            priv->_out->add("\"  \"");
+            priv->_out->add(mas[i]->state);
+            priv->_out->add("\"  \"(");
+            priv->_out->add(std::to_string(mas[i]->longtitude.degrees));
+            priv->_out->add("d ");
+            priv->_out->add(std::to_string(mas[i]->longtitude.minutes));
+            priv->_out->add("m ");
+            priv->_out->add(std::to_string(mas[i]->longtitude.seconds));
+            priv->_out->add("s North, ");
+            priv->_out->add(std::to_string(mas[i]->latitude.degrees));
+            priv->_out->add("d ");
+            priv->_out->add(std::to_string(mas[i]->latitude.minutes));
+            priv->_out->add("m ");
+            priv->_out->add(std::to_string(mas[i]->latitude.seconds));
+            priv->_out->add("s West");
+            priv->_out->add(")\"\n");
+            delete mas[i];
+        }
+
+        priv->_out->add("------------------------------------------------------------------------------------------\n");
+    }
+    else
+    {
+        priv->_out->add("  Nothing was found at (");
+        priv->_out->add(std::to_string(long_d.degrees));
+        priv->_out->add("d ");
+        priv->_out->add(std::to_string(long_d.minutes));
+        priv->_out->add("m ");
+        priv->_out->add(std::to_string(long_d.seconds));
+        priv->_out->add("s North +/- ");
+        priv->_out->add(std::to_string(long_p));
+        priv->_out->add(", ");
+        priv->_out->add(std::to_string(lat_d.degrees));
+        priv->_out->add("d ");
+        priv->_out->add(std::to_string(lat_d.minutes));
+        priv->_out->add("m ");
+        priv->_out->add(std::to_string(lat_d.seconds));
+        priv->_out->add("s West +/- ");
+        priv->_out->add(std::to_string(lat_p));
+        priv->_out->add(")\n");
+        priv->_out->add("------------------------------------------------------------------------------------------\n");
     }
 
 exit:

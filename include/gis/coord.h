@@ -6,30 +6,50 @@
 #include <cstring>
 
 #include <gis/logger.h>
-#include <gis/gis.h>
 
 #define QUAD 4
-#define k 4
+#define K 4
+
+
+typedef struct DMS
+{
+    char sign_lat;
+    char sign_long;
+    unsigned int degrees;
+    unsigned int minutes;
+    unsigned int seconds;
+} DMS;
+
+
+typedef struct coord_rec
+{
+    long point[2];
+    long seek;
+} coord_rec;
+
 
 typedef struct coord
 {
     struct coord *next[QUAD];
-    std::vector<GisRecord*> mas;
+    std::vector<struct coord_rec> mas;
     long bounds_a[2];
     long bounds_b[2];
 } coord;
+
+
+long make_second(struct DMS const &arg);
 
 
 class Coord
 {
     Logger *log;
     struct coord *top;
-    DMS bounds_a[2];
-    DMS bounds_b[2];
+    long bounds_a[2];
+    long bounds_b[2];
 
 protected:
-    void remove(struct coord const *elem);
-    static int add_new_elem(struct coord **top, GisRecord const* arg);
+    void remove(void);
+    static int add_new_elem(struct coord *top, struct coord_rec const* arg);
 
 public:
     Coord()
@@ -43,12 +63,23 @@ public:
     }
     ~Coord()
     {
-        remove(top);
+        remove();
     }
 
-    int add(GisRecord const* arg);
-    long search(DMS const* arg);
-    void set_bounds(DMS const a, DMS const b);
+    int add(struct GisRecord const* arg);
+    long search(
+        std::vector<long> &result
+      , struct DMS const* long_arg
+      , struct DMS const* lat_arg
+      , unsigned long_p
+      , unsigned lat_p
+    );
+    long search(
+        std::vector<long> &mas
+      , struct DMS const* long_arg
+      , struct DMS const* lat_arg
+    );
+    void set_bounds(struct DMS const a, DMS const b, DMS const c, DMS const d);
 };
 
 #endif /* __COORD_H_ */
