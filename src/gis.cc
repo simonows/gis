@@ -112,7 +112,7 @@ static char* strtoke(char *str, const char *delim)
 }
 
 
-static GisRecord *parse_gis(Logger *log, char *const arg)
+static GisRecord *parse_gis(char *const arg)
 {
     GisRecord *rec = new GisRecord;
     char *word = nullptr;
@@ -212,16 +212,33 @@ void Gis::add(char *const arg)
 {
     GisRecord *rec = nullptr;
     long pos = _data.tellp();
+    long value = 0;
+    std::vector<long> mas;
 
     _data.clear();
     _data << arg << std::endl;
-    rec = parse_gis(log, arg);
+    rec = parse_gis(arg);
     if (!rec)
     {
         goto exit;
     }
 
-    hash_table[rec->feature_name + rec->state] = static_cast<unsigned long>(pos);
+    // unique names count
+    if (!name_table.get(rec->feature_name, value))
+    {
+        features_by_name_count++;
+        avg_name_length += rec->feature_name.length();
+    }
+
+    // unique locations count
+    quad.search(mas, &rec->longtitude, &rec->latitude);
+    if (mas.size() == 0)
+    {
+        imported_location_count++;
+    }
+
+    hash_table.put(rec->feature_name + rec->state, pos);
+    name_table.put(rec->feature_name, pos);
     rec->row = pos;
     quad.add(rec);
 
@@ -233,18 +250,17 @@ struct GisRecord *Gis::get(std::string name, std::string state)
 {
     char buffer[256] = { 0 };
     size_t pool_size = pool.size();
-
-    std::map <std::string, unsigned long> :: iterator it = hash_table.find(name + state);
+    long value = 0;
     GisRecord *rec = nullptr;
 
-    if (it == hash_table.end())
+    if (!hash_table.get(name + state, value))
     {
         return nullptr;
     }
 
     for (size_t i = 0; i < pool_size; i++)
     {
-        if (pool[i].row != static_cast<long>(it->second))
+        if (pool[i].row != value)
         {
             continue;
         }
@@ -254,11 +270,11 @@ struct GisRecord *Gis::get(std::string name, std::string state)
         return rec;
     }
 
-    _data.seekg(static_cast<long>(it->second));
+    _data.seekg(value);
     _data.getline(buffer, 256);
     _data.seekg(0);
-    rec = parse_gis(log, buffer);
-    rec->row = static_cast<long>(it->second);
+    rec = parse_gis(buffer);
+    rec->row = value;
 
     if (pool_size >= POOL_SIZE)
     {
@@ -284,7 +300,7 @@ int Gis::get(std::vector<struct GisRecord *> &mas, DMS const &a_long, DMS const 
         _data.seekg(ret[i]);
         _data.getline(buffer, 256);
         _data.seekg(0);
-        temp = parse_gis(log, buffer);
+        temp = parse_gis(buffer);
         temp->row = ret[i];
         mas.push_back(temp);
 
@@ -320,7 +336,7 @@ int Gis::get(
         _data.seekg(ret[i]);
         _data.getline(buffer, 256);
         _data.seekg(0);
-        temp = parse_gis(log, buffer);
+        temp = parse_gis(buffer);
         temp->row = ret[i];
         mas.push_back(temp);
 
@@ -335,3 +351,51 @@ exit:
     return rc;
 }
 
+
+size_t Gis::features_count(void)
+{
+    return features_by_name_count;
+}
+
+
+size_t Gis::longest_probe(void)
+{
+    return longest_probe_count;
+}
+
+
+size_t Gis::loc_count(void)
+{
+    return imported_location_count;
+}
+
+
+size_t Gis::avg_name(void)
+{
+    return features_by_name_count ? avg_name_length / features_by_name_count : 0;
+}
+
+
+void Gis::get_hash(std::vector<struct GisRecordWithHash> &mas)
+{
+    struct GisRecord *temp2 = nullptr;
+    struct GisRecordWithHash temp;
+    char buffer[256] = { 0 };
+    std::vector<long> temp_long;
+    std::vector<unsigned long> temp_hash;
+
+    hash_table.getAll(temp_long, temp_hash);
+    for (size_t i = 0; i < temp_long.size(); i++)
+    {
+        _data.seekg(temp_long[i]);
+        _data.getline(buffer, 256);
+        _data.seekg(0);
+        temp2 = parse_gis(buffer);
+        temp2->row = temp_long[i];
+
+        temp.rec = *temp2;
+        temp.hash = temp_hash[i];
+        mas.push_back(temp);
+        delete temp2;
+    }
+}

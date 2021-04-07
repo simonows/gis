@@ -97,23 +97,27 @@ int CommandProcessor::world(CommandProcessor *priv, std::vector<std::string> &ar
     priv->_gis->set_bounds(a_long, a_lat, b_long, b_lat);
     if (priv->_out)
     {
-        for (int i = 0; i < static_cast<int>(args.size()); i++)
+        for (int i = 0; i < static_cast<int>(args.size() - 1); i++)
         {
-            priv->_out->add(" ");
             priv->_out->add(args[static_cast<unsigned long>(i)]);
+            priv->_out->add("\t");
         }
+        priv->_out->add(args[args.size() - 1]);
+
+        priv->_out->add("\n\n------------------------------------------------------------------------------------------\n");
+        priv->_out->add("Latitude/longitude values in index entries are shown as signed integers, in total seconds.");
         priv->_out->add("\n");
         priv->_out->add("------------------------------------------------------------------------------------------\n");
-        priv->_out->add("						World boundaries are set to:\n");
-        priv->_out->add("						         ");
+        priv->_out->add("                        World boundaries are set to:\n");
+        priv->_out->add("                                   ");
         priv->_out->add(std::to_string(dms_to_total(a_long)));
         priv->_out->add("\n");
-        priv->_out->add("					");
+        priv->_out->add("                        ");
         priv->_out->add(std::to_string(dms_to_total(a_lat)));
-        priv->_out->add("                ");
+        priv->_out->add("              ");
         priv->_out->add(std::to_string(dms_to_total(b_lat)));
         priv->_out->add("\n");
-        priv->_out->add("						         ");
+        priv->_out->add("                                   ");
         priv->_out->add(std::to_string(dms_to_total(b_long)));
         priv->_out->add("\n");
         priv->_out->add("------------------------------------------------------------------------------------------\n");
@@ -174,17 +178,27 @@ int CommandProcessor::import(CommandProcessor *priv, std::vector<std::string> &a
 
     if (priv->_out)
     {
-        priv->_out->add("\n");
         priv->_out->add("Command ");
         priv->_out->add(std::to_string(priv->_comm_num));
         priv->_out->add(": ");
         for (int i = 0; i < static_cast<int>(args.size()); i++)
         {
-            priv->_out->add(" ");
+            priv->_out->add("\t");
             priv->_out->add(args[static_cast<unsigned long>(i)]);
         }
+        priv->_out->add("\n\n");
+        priv->_out->add("Imported Features by name: ");
+        priv->_out->add(std::to_string(priv->_gis->features_count()));
+        priv->_out->add("\n");
+        priv->_out->add("Longest probe sequence:    ");
+        priv->_out->add(std::to_string(priv->_gis->longest_probe()));
+        priv->_out->add("\n");
+        priv->_out->add("Imported Locations:        ");
+        priv->_out->add(std::to_string(priv->_gis->loc_count()));
+        priv->_out->add("\n");
+        priv->_out->add("Average name length:       ");
+        priv->_out->add(std::to_string(priv->_gis->avg_name()));
         priv->_out->add("\n------------------------------------------------------------------------------------------\n");
-        priv->_out->add("Successfully imported!\n");
     }
 
 exit:
@@ -210,6 +224,82 @@ int CommandProcessor::debug(CommandProcessor *priv, std::vector<std::string> &ar
         *priv->_log << WARN << priv->_log->get_input_file() << ":" << priv->_line << " ";
         *priv->_log << "world is not set:" << std::endl;
         goto exit;
+    }
+
+    if (!priv->_out)
+    {
+        goto exit;
+    }
+
+    priv->_out->add("Command ");
+    priv->_out->add(std::to_string(priv->_comm_num));
+    priv->_out->add(": ");
+    for (int i = 0; i < static_cast<int>(args.size()); i++)
+    {
+        priv->_out->add("\t");
+        priv->_out->add(args[static_cast<unsigned long>(i)]);
+    }
+    priv->_out->add("\n\n");
+
+    if (args[1] == "world")
+    {
+        priv->_out->add("This command optional to implement");
+        priv->_out->add("\n------------------------------------------------------------------------------------------\n");
+    }
+    else if (args[1] == "quad")
+    {
+        priv->_out->add("This command optional to implement");
+        priv->_out->add("\n------------------------------------------------------------------------------------------\n");
+    }
+    else if (args[1] == "hash")
+    {
+        std::vector<struct GisRecordWithHash> hash;
+        priv->_gis->get_hash(hash);
+
+        priv->_out->add("Format of display is \n");
+        priv->_out->add("Slot number: data record\n");
+        priv->_out->add("Current table size is 1024\n");
+        priv->_out->add("Number of elements in table is ");
+        priv->_out->add(std::to_string(hash.size()));
+        priv->_out->add("\n\n");
+
+        for (size_t i = 0; i < hash.size(); i++)
+        {
+            priv->_out->add("  ");
+            priv->_out->add(std::to_string(hash[i].rec.row));
+            priv->_out->add(":  [");
+            priv->_out->add(hash[i].rec.feature_name);
+            priv->_out->add(": ");
+            priv->_out->add(hash[i].rec.state);
+            priv->_out->add(" [");
+            priv->_out->add(std::to_string(hash[i].hash));
+            priv->_out->add("]");
+            priv->_out->add("]\n");
+        }
+
+        priv->_out->add("------------------------------------------------------------------------------------------\n");
+    }
+    else if (args[1] == "pool")
+    {
+        auto ptr = priv->_gis->get_pool();
+        priv->_out->add("MRU\n");
+        for (size_t i = 0; i < ptr->size(); i++)
+        {
+            priv->_out->add("  ");
+            priv->_out->add(std::to_string((*ptr)[i].row));
+            priv->_out->add(":  ");
+            priv->_out->add((*ptr)[i].country);
+            priv->_out->add("  (");
+            priv->_out->add(std::to_string((*ptr)[i].longtitude.degrees) + "d ");
+            priv->_out->add(std::to_string((*ptr)[i].longtitude.minutes) + "m ");
+            priv->_out->add(std::to_string((*ptr)[i].longtitude.seconds) + "s North, ");
+            priv->_out->add(std::to_string((*ptr)[i].latitude.degrees) + "d ");
+            priv->_out->add(std::to_string((*ptr)[i].latitude.minutes) + "m ");
+            priv->_out->add(std::to_string((*ptr)[i].latitude.seconds) + "s West)\n");
+
+        }
+        priv->_out->add("LRU\n");
+        priv->_out->add("------------------------------------------------------------------------------------------\n");
     }
 
 exit:
