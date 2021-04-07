@@ -8,7 +8,7 @@
 #include <gis/logger.h>
 
 #define QUAD 4
-#define K 4
+#define KK 4
 
 
 typedef struct DMS

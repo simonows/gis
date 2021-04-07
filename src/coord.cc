@@ -60,17 +60,17 @@ int Coord::add_new_elem(struct coord *top, struct coord_rec const* arg)
         goto exit;
     }
 
-    if (top->mas.size() < K)
+    if (top->mas.size() < KK)
     {
         top->mas.push_back(*arg);
         rc = 1;
         goto exit;
     }
 
-    for (int i = 0; i < K; i++)
+    for (int i = 0; i < KK; i++)
     {
         top->next[i] = new struct coord;
-        for (int j = 0; j < K; j++)
+        for (int j = 0; j < KK; j++)
         {
             top->next[i]->next[j] = nullptr;
         }
@@ -97,7 +97,7 @@ int Coord::add_new_elem(struct coord *top, struct coord_rec const* arg)
     top->next[3]->bounds_b[1] = (top->bounds_a[1] + top->bounds_b[1]) / 2;
 
     top->mas.push_back(*arg);
-    for (size_t i = 0; i < K + 1; i++)
+    for (size_t i = 0; i < KK + 1; i++)
     {
         for (size_t j = 0; j < QUAD; j++)
         {
