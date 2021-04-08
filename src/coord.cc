@@ -277,3 +277,59 @@ void Coord::set_bounds(struct DMS const a, DMS const b, DMS const c, DMS const d
     top->bounds_b[1] = bounds_b[1];
 }
 
+
+static void set_level_str(std::string &buffer, unsigned level)
+{
+    for (unsigned i = 0; i < level; i++)
+    {
+        buffer += "   ";
+    }
+}
+
+static void _print(std::string &buffer, unsigned level, struct coord const *arg)
+{
+    if (arg->next[0] == nullptr)
+    {
+        set_level_str(buffer, level);
+        if (arg->mas.size() == 0)
+        {
+            buffer += "*\n";
+            return;
+        }
+        else
+        {
+            buffer += "[";
+            for (size_t i = 0; i < arg->mas.size(); i++)
+            {
+                buffer += "(" + std::to_string(arg->mas[i].point[0]);
+                buffer += "," + std::to_string(arg->mas[i].point[1]);
+                buffer += "), ";
+                buffer += std::to_string(arg->mas[i].seek);
+            }
+            buffer += "]\n";
+        }
+        return;
+    }
+
+    for (int i = 0; i < QUAD; i++)
+    {
+        _print(buffer, level + 1, arg->next[i]);
+        if (i == QUAD / 2 - 1)
+        {
+            set_level_str(buffer, level);
+            buffer += "@\n";
+        }
+    }
+}
+
+std::string Coord::print(void)
+{
+    std::string buffer;
+
+    _print(buffer, 0, top);
+
+    return buffer;
+}
+
+
+

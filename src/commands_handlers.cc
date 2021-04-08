@@ -248,7 +248,7 @@ int CommandProcessor::debug(CommandProcessor *priv, std::vector<std::string> &ar
     }
     else if (args[1] == "quad")
     {
-        priv->_out->add("This command optional to implement");
+        priv->_out->add(priv->_gis->print_quad());
         priv->_out->add("\n------------------------------------------------------------------------------------------\n");
     }
     else if (args[1] == "hash")
@@ -586,9 +586,16 @@ int CommandProcessor::what_is_in(CommandProcessor *priv, std::vector<std::string
     priv->_gis->get(mas, long_d, lat_d, long_p, lat_p);
     if (mas.size() && priv->_out)
     {
-        priv->_out->add("  The following ");
-        priv->_out->add(std::to_string(mas.size()));
-        priv->_out->add(" feature(s) were found at (");
+        if (cou == 2)
+        {
+            priv->_out->add("  The following features matching your criteria were found in  (");
+        }
+        else
+        {
+            priv->_out->add("  The following ");
+            priv->_out->add(std::to_string(mas.size()));
+            priv->_out->add(" feature(s) were found at (");
+        }
         priv->_out->add(std::to_string(long_d.degrees));
         priv->_out->add("d ");
         priv->_out->add(std::to_string(long_d.minutes));
@@ -606,28 +613,135 @@ int CommandProcessor::what_is_in(CommandProcessor *priv, std::vector<std::string
         priv->_out->add(std::to_string(lat_p));
         priv->_out->add(")\n");
 
+        if (cou == 2)
+        {
+            priv->_out->add("\n");
+        }
+
         for (size_t i = 0; i < mas.size(); i++)
         {
-            priv->_out->add("    ");
-            priv->_out->add(std::to_string(mas[i]->row));
-            priv->_out->add(":  \"");
-            priv->_out->add(mas[i]->feature_name);
-            priv->_out->add("\"  \"");
-            priv->_out->add(mas[i]->state);
-            priv->_out->add("\"  \"(");
-            priv->_out->add(std::to_string(mas[i]->longtitude.degrees));
-            priv->_out->add("d ");
-            priv->_out->add(std::to_string(mas[i]->longtitude.minutes));
-            priv->_out->add("m ");
-            priv->_out->add(std::to_string(mas[i]->longtitude.seconds));
-            priv->_out->add("s North, ");
-            priv->_out->add(std::to_string(mas[i]->latitude.degrees));
-            priv->_out->add("d ");
-            priv->_out->add(std::to_string(mas[i]->latitude.minutes));
-            priv->_out->add("m ");
-            priv->_out->add(std::to_string(mas[i]->latitude.seconds));
-            priv->_out->add("s West");
-            priv->_out->add(")\"\n");
+            if (cou == 2)
+            {
+                if (args[2] == "pop")
+                {
+                    if (mas[i]->feature_cat != "Populated Place")
+                    {
+                        delete mas[i];
+                        continue;
+                    }
+                }
+                if (args[2] == "water")
+                {
+                    if (mas[i]->feature_cat != "Arroyo"
+                     && mas[i]->feature_cat != "Bay"
+                     && mas[i]->feature_cat != "Bend"
+                     && mas[i]->feature_cat != "Canal"
+                     && mas[i]->feature_cat != "Channel"
+                     && mas[i]->feature_cat != "Falls"
+                     && mas[i]->feature_cat != "Glacier"
+                     && mas[i]->feature_cat != "Gut"
+                     && mas[i]->feature_cat != "Harbor"
+                     && mas[i]->feature_cat != "Lake"
+                     && mas[i]->feature_cat != "Rapids"
+                     && mas[i]->feature_cat != "Reservoir"
+                     && mas[i]->feature_cat != "Sea"
+                     && mas[i]->feature_cat != "Spring"
+                     && mas[i]->feature_cat != "Stream"
+                     && mas[i]->feature_cat != "Swamp"
+                     && mas[i]->feature_cat != "Well"
+                    ){
+                        delete mas[i];
+                        continue;
+                    }
+                }
+                if (args[2] == "structure")
+                {
+                    if (mas[i]->feature_cat != "Airport"
+                     && mas[i]->feature_cat != "Bridge"
+                     && mas[i]->feature_cat != "Building"
+                     && mas[i]->feature_cat != "Church"
+                     && mas[i]->feature_cat != "Dam"
+                     && mas[i]->feature_cat != "Hospital"
+                     && mas[i]->feature_cat != "Levee"
+                     && mas[i]->feature_cat != "Park"
+                     && mas[i]->feature_cat != "Post Office"
+                     && mas[i]->feature_cat != "School"
+                     && mas[i]->feature_cat != "Tower"
+                     && mas[i]->feature_cat != "Tunnel"
+                    ){
+                        delete mas[i];
+                        continue;
+                    }
+                }
+            }
+            if (cou != 1)
+            {
+                priv->_out->add("    ");
+                priv->_out->add(std::to_string(mas[i]->row));
+                priv->_out->add(":  \"");
+                priv->_out->add(mas[i]->feature_name);
+                priv->_out->add("\"  \"");
+                priv->_out->add(mas[i]->state);
+                priv->_out->add("\"  \"(");
+                priv->_out->add(std::to_string(mas[i]->longtitude.degrees));
+                priv->_out->add("d ");
+                priv->_out->add(std::to_string(mas[i]->longtitude.minutes));
+                priv->_out->add("m ");
+                priv->_out->add(std::to_string(mas[i]->longtitude.seconds));
+                priv->_out->add("s North, ");
+                priv->_out->add(std::to_string(mas[i]->latitude.degrees));
+                priv->_out->add("d ");
+                priv->_out->add(std::to_string(mas[i]->latitude.minutes));
+                priv->_out->add("m ");
+                priv->_out->add(std::to_string(mas[i]->latitude.seconds));
+                priv->_out->add("s West");
+                priv->_out->add(")\"\n");
+            }
+            else
+            {
+                priv->_out->add("\n");
+                priv->_out->add("  Feature ID   : ");
+                priv->_out->add(std::to_string(mas[i]->feature_id));
+                priv->_out->add("\n");
+                priv->_out->add("  Feature Name : ");
+                priv->_out->add(mas[i]->feature_name);
+                priv->_out->add("\n");
+                priv->_out->add("  Feature Cat  : ");
+                priv->_out->add(mas[i]->feature_cat);
+                priv->_out->add("\n");
+                priv->_out->add("  State        : ");
+                priv->_out->add(mas[i]->state);
+                priv->_out->add("\n");
+                priv->_out->add("  Longitude    : ");
+                priv->_out->add(std::to_string(mas[i]->longtitude.degrees));
+                priv->_out->add("d ");
+                priv->_out->add(std::to_string(mas[i]->longtitude.minutes));
+                priv->_out->add("m ");
+                priv->_out->add(std::to_string(mas[i]->longtitude.seconds));
+                priv->_out->add("s North");
+                priv->_out->add("\n");
+                priv->_out->add("  Latitude     : ");
+                priv->_out->add(std::to_string(mas[i]->latitude.degrees));
+                priv->_out->add("d ");
+                priv->_out->add(std::to_string(mas[i]->latitude.minutes));
+                priv->_out->add("m ");
+                priv->_out->add(std::to_string(mas[i]->latitude.seconds));
+                priv->_out->add("s West");
+                priv->_out->add("\n");
+                priv->_out->add("  Elev in ft   : ");
+                priv->_out->add(std::to_string(mas[i]->elev));
+                priv->_out->add("\n");
+                priv->_out->add("  USGS Quad    : ");
+                priv->_out->add(mas[i]->usgs);
+                priv->_out->add("\n");
+                priv->_out->add("  Date created : ");
+                priv->_out->add(std::to_string(mas[i]->month));
+                priv->_out->add("/");
+                priv->_out->add(std::to_string(mas[i]->day));
+                priv->_out->add("/");
+                priv->_out->add(std::to_string(mas[i]->year));
+                priv->_out->add("\n");
+            }
             delete mas[i];
         }
 

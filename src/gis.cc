@@ -399,3 +399,10 @@ void Gis::get_hash(std::vector<struct GisRecordWithHash> &mas)
         delete temp2;
     }
 }
+
+
+std::string Gis::print_quad(void)
+{
+    return quad.print();
+}
+

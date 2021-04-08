@@ -48,7 +48,7 @@ int main(int argc, char **argv)
     outlog << "Begin of GIS Program log" << std::endl;
     outlog << "dbFile: " << argv[1] << std::endl;
     outlog << "script: " << argv[2] << std::endl;
-    outlog << "log: " << argv[3] << std::endl;
+    outlog << "log:    " << argv[3] << std::endl;
     outlog << "Start Time: " << now_time.substr(0, now_time.size() - 1) << std::endl;
 
     while (!script.eof() && comproc.get_state())
