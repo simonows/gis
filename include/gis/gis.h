@@ -93,6 +93,7 @@ public:
     size_t longest_probe(void);
     size_t loc_count(void);
     size_t avg_name(void);
+    std::string print_quad(void);
 };
 
 #endif /* __GIS_H_ */

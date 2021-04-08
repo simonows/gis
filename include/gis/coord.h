@@ -80,6 +80,7 @@ public:
       , struct DMS const* lat_arg
     );
     void set_bounds(struct DMS const a, DMS const b, DMS const c, DMS const d);
+    std::string print(void);
 };
 
 #endif /* __COORD_H_ */
